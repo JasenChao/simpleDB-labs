@@ -1,0 +1,5 @@
+.idea
+bin
+log
+dist
+some_data_file.*
