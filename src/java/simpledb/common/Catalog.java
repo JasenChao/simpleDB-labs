@@ -22,12 +22,17 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Catalog {
 
+    ConcurrentHashMap<Integer, Table> tableIdToTable;
+    ConcurrentHashMap<String, Integer> tableNameToTableId;
+
     /**
      * Constructor.
      * Creates a new, empty catalog.
      */
     public Catalog() {
         // TODO: some code goes here
+        tableIdToTable = new ConcurrentHashMap<>();
+        tableNameToTableId = new ConcurrentHashMap<>();
     }
 
     /**
@@ -42,6 +47,8 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // TODO: some code goes here
+        tableIdToTable.put(file.getId(), new Table(file, name, pkeyField));
+        tableNameToTableId.put(name, file.getId());
     }
 
     public void addTable(DbFile file, String name) {
@@ -67,7 +74,10 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // TODO: some code goes here
-        return 0;
+        if (name != null && tableNameToTableId.containsKey(name)) {
+            return tableNameToTableId.get(name);
+        }
+        throw new NoSuchElementException("Table doesn't exist"); 
     }
 
     /**
@@ -79,7 +89,10 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // TODO: some code goes here
-        return null;
+        if (tableIdToTable.containsKey(tableid)) {
+            return tableIdToTable.get(tableid).getFile().getTupleDesc();
+        }
+        throw new NoSuchElementException("Table doesn't exist");
     }
 
     /**
@@ -91,22 +104,31 @@ public class Catalog {
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
         // TODO: some code goes here
-        return null;
+        if (tableIdToTable.containsKey(tableid)) {
+            return tableIdToTable.get(tableid).getFile();
+        }
+        throw new NoSuchElementException("Table doesn't exist");
     }
 
     public String getPrimaryKey(int tableid) {
         // TODO: some code goes here
-        return null;
+        if (tableIdToTable.containsKey(tableid)) {
+            return tableIdToTable.get(tableid).getPkeyField();
+        }
+        throw new NoSuchElementException("Table doesn't exist");
     }
 
     public Iterator<Integer> tableIdIterator() {
         // TODO: some code goes here
-        return null;
+        return tableIdToTable.keySet().iterator();
     }
 
     public String getTableName(int id) {
         // TODO: some code goes here
-        return null;
+        if (tableIdToTable.containsKey(id)) {
+            return tableIdToTable.get(id).getName();
+        }
+        throw new NoSuchElementException("Table doesn't exist");
     }
 
     /**
@@ -114,6 +136,8 @@ public class Catalog {
      */
     public void clear() {
         // TODO: some code goes here
+        tableIdToTable.clear();
+        tableNameToTableId.clear();
     }
 
     /**
@@ -173,3 +197,30 @@ public class Catalog {
     }
 }
 
+class Table {
+    private DbFile file;
+    private String name;
+    private String pkeyField;
+
+    public Table(DbFile file, String name, String pkeyField) {
+        this.file = file;
+        this.name = name;
+        this.pkeyField = pkeyField;
+    }
+
+    public Table(DbFile file, String name) {
+        this(file, name, "");
+    }
+
+    public DbFile getFile() {
+        return file;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPkeyField() {
+        return pkeyField;
+    }
+}

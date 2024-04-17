@@ -19,6 +19,10 @@ import java.util.NoSuchElementException;
 public class SeqScan implements OpIterator {
 
     private static final long serialVersionUID = 1L;
+    private final TransactionId tid;
+    private int tableId;
+    private String tableAlias;
+    private DbFileIterator iterator;
 
     /**
      * Creates a sequential scan over the specified table as a part of the
@@ -35,6 +39,9 @@ public class SeqScan implements OpIterator {
      */
     public SeqScan(TransactionId tid, int tableid, String tableAlias) {
         // TODO: some code goes here
+        this.tid = tid;
+        this.tableId = tableid;
+        this.tableAlias = tableAlias;
     }
 
     /**
@@ -42,7 +49,7 @@ public class SeqScan implements OpIterator {
      *         be the actual name of the table in the catalog of the database
      */
     public String getTableName() {
-        return null;
+        return Database.getCatalog().getTableName(tableId);
     }
 
     /**
@@ -50,7 +57,7 @@ public class SeqScan implements OpIterator {
      */
     public String getAlias() {
         // TODO: some code goes here
-        return null;
+        return this.tableAlias;
     }
 
     /**
@@ -66,6 +73,8 @@ public class SeqScan implements OpIterator {
      */
     public void reset(int tableid, String tableAlias) {
         // TODO: some code goes here
+        this.tableId = tableid;
+        this.tableAlias = tableAlias;
     }
 
     public SeqScan(TransactionId tid, int tableId) {
@@ -74,6 +83,8 @@ public class SeqScan implements OpIterator {
 
     public void open() throws DbException, TransactionAbortedException {
         // TODO: some code goes here
+        iterator = Database.getCatalog().getDatabaseFile(tableId).iterator(tid);
+        iterator.open();
     }
 
     /**
@@ -88,26 +99,45 @@ public class SeqScan implements OpIterator {
      */
     public TupleDesc getTupleDesc() {
         // TODO: some code goes here
-        return null;
+        TupleDesc oldDesc = Database.getCatalog().getTupleDesc(tableId);
+        String[] names = new String[oldDesc.numFields()];
+        Type[] types = new Type[oldDesc.numFields()];
+        for (int i = 0; i < oldDesc.numFields(); ++i) {
+            names[i] = getAlias() + "." + oldDesc.getFieldName(i);
+            types[i] = oldDesc.getFieldType(i);
+        }
+        return new TupleDesc(types, names);
     }
 
     public boolean hasNext() throws TransactionAbortedException, DbException {
         // TODO: some code goes here
+        if (iterator != null) {
+            return iterator.hasNext();
+        }
         return false;
     }
 
     public Tuple next() throws NoSuchElementException,
             TransactionAbortedException, DbException {
         // TODO: some code goes here
-        return null;
+        if (iterator == null) {
+            throw new NoSuchElementException();
+        }
+        Tuple t = iterator.next();
+        if (t == null) {
+            throw new NoSuchElementException();
+        }
+        return t;
     }
 
     public void close() {
         // TODO: some code goes here
+        iterator = null;
     }
 
     public void rewind() throws DbException, NoSuchElementException,
             TransactionAbortedException {
         // TODO: some code goes here
+        iterator.rewind();
     }
 }
