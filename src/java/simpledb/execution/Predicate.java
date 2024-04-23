@@ -12,6 +12,10 @@ public class Predicate implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private int field;
+    private Op op;
+    private Field operand;
+
     /**
      * Constants used for return codes in Field.compare
      */
@@ -57,6 +61,9 @@ public class Predicate implements Serializable {
      */
     public Predicate(int field, Op op, Field operand) {
         // TODO: some code goes here
+        this.field = field;
+        this.op = op;
+        this.operand = operand;
     }
 
     /**
@@ -64,7 +71,7 @@ public class Predicate implements Serializable {
      */
     public int getField() {
         // TODO: some code goes here
-        return -1;
+        return this.field;
     }
 
     /**
@@ -72,7 +79,7 @@ public class Predicate implements Serializable {
      */
     public Op getOp() {
         // TODO: some code goes here
-        return null;
+        return this.op;
     }
 
     /**
@@ -80,7 +87,7 @@ public class Predicate implements Serializable {
      */
     public Field getOperand() {
         // TODO: some code goes here
-        return null;
+        return this.operand;
     }
 
     /**
@@ -94,7 +101,8 @@ public class Predicate implements Serializable {
      */
     public boolean filter(Tuple t) {
         // TODO: some code goes here
-        return false;
+        Field field = t.getField(this.field);
+        return field.compare(this.op, this.operand);
     }
 
     /**
@@ -103,6 +111,6 @@ public class Predicate implements Serializable {
      */
     public String toString() {
         // TODO: some code goes here
-        return "";
+        return String.format("f = %d op = %s operand = %s", this.field, this.op.toString(), this.operand.toString());
     }
 }
