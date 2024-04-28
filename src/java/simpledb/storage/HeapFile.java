@@ -206,12 +206,15 @@ public class HeapFile implements DbFile {
         // not necessary for lab1
         ArrayList<Page> pages = new ArrayList<Page>();
         for (int i = 0; i < numPages(); i++) {
-            HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, new HeapPageId(getId(), i), Permissions.READ_WRITE);
-            if (page.getNumUnusedSlots() > 0) {
-                page.insertTuple(t);
-                pages.add(page);
-                return pages;
+            HeapPageId pid = new HeapPageId(getId(), i);
+            HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_WRITE);
+            if (page.getNumUnusedSlots() == 0) {
+                Database.getBufferPool().unsafeReleasePage(tid, pid);
+                continue;
             }
+            page.insertTuple(t);
+            pages.add(page);
+            return pages;
         }
 
         BufferedOutputStream bw = new BufferedOutputStream(new FileOutputStream(file, true));
@@ -220,6 +223,7 @@ public class HeapFile implements DbFile {
         bw.close();
         HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, new HeapPageId(getId(), numPages() - 1), Permissions.READ_WRITE);
         page.insertTuple(t);
+        page.markDirty(true, tid);
         pages.add(page);
         return pages;
     }
@@ -231,6 +235,7 @@ public class HeapFile implements DbFile {
         // not necessary for lab1
         HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, t.getRecordId().getPageId(), Permissions.READ_WRITE);
         page.deleteTuple(t);
+        page.markDirty(true, tid);
         return Collections.singletonList(page);
     }
 
